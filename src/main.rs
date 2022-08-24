@@ -19,10 +19,10 @@ fn lsh_loop() {
 
 fn lsh_read_line() -> String {
     let mut input = String::new();
-    io::stdin().read_line(&mut input);
+    io::stdin().read_line(&mut input).unwrap();
     input
 }
 
-fn lsh_split_line(line: &String) -> SplitWhitespace {
+fn lsh_split_line(line: &str) -> SplitWhitespace {
     line.split_whitespace()
 }
