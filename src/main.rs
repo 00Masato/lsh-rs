@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, str::SplitWhitespace};
 
 fn main() -> io::Result<()> {
     lsh_loop();
@@ -7,14 +7,13 @@ fn main() -> io::Result<()> {
 
 fn lsh_loop() {
     let mut line = String::new();
-    let mut args = String::new();
     let status: i32;
     loop {
         println!("> ");
         line = lsh_read_line();
-        // args = lsh_split_line(line);
+        let mut args = lsh_split_line(&line);
         // status = lsh_execute(args);
-        println!("{}", line);
+        println!("{} {}", line, args.next().unwrap());
     }
 }
 
@@ -22,4 +21,8 @@ fn lsh_read_line() -> String {
     let mut input = String::new();
     io::stdin().read_line(&mut input);
     input
+}
+
+fn lsh_split_line(line: &String) -> SplitWhitespace {
+    line.split_whitespace()
 }
