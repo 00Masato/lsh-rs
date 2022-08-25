@@ -1,4 +1,5 @@
 use std::{io, str::SplitWhitespace};
+use fork::{fork, Fork};
 
 fn main() -> io::Result<()> {
     lsh_loop();
@@ -25,4 +26,18 @@ fn lsh_read_line() -> String {
 
 fn lsh_split_line(line: &str) -> SplitWhitespace {
     line.split_whitespace()
+}
+
+fn lsh_launch(args: SplitWhitespace) -> i32 {
+    let status: i32;
+    let mut pid = fork();
+    match pid {
+        Ok(Fork::Parent(child)) => {
+            let wpid_result = waitpid(child)
+        }
+        Ok(Fork::Child) => {
+            println!("child");
+        }
+        Err(_) => println!("err");
+    }
 }
