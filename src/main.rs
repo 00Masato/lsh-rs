@@ -1,12 +1,19 @@
 use std::{io, fmt, str::SplitWhitespace};
 use std::error;
+use std::process::Command;
 use fork::{fork, Fork};
 use nix::sys::wait::*;
 
-// type Result<T> = std::result::Result<T, LshError>;
-
 #[derive(Debug, Clone)]
-struct LshError;
+struct LshError {
+    pub message: String,
+}
+
+impl LshError {
+    pub fn new(message: &str) -> LshError {
+        LshError { message: message.to_string() }
+    }
+}
 
 impl fmt::Display for LshError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -35,8 +42,7 @@ fn lsh_loop() {
     loop {
         println!("> ");
         line = lsh_read_line();
-        let mut args = lsh_split_line(&line);
-        // status = lsh_execute(args);
+        lsh_launch(&line);
         println!("{} {}", line, args.next().unwrap());
     }
 }
@@ -51,20 +57,33 @@ fn lsh_split_line(line: &str) -> SplitWhitespace {
     line.split_whitespace()
 }
 
-fn lsh_launch(args: SplitWhitespace) -> Result<Status, LshError> {
-    let mut pid = fork();
+fn lsh_launch(line: &str) -> Result<Status, LshError> {
+    let pid = fork();
     match pid {
         Ok(Fork::Parent(child)) => {
-            let wpid_result = waitpid(child, None);
+            let wpid_result = waitpid(child, None)
+                .map_err(|err| LshError::new(&format!("{}", err)));
             match wpid_result {
                 Ok(WaitStatus::Exited(_, _)) => Ok(Status::Success),
                 Ok(WaitStatus::Signaled(_, _, _)) => Ok(Status::Success),
-                Err(err) => LshError
+                Err(err) => Err(LshError::new(&err.message)),
+                _ => Ok(Status::Success),
             }
         }
         Ok(Fork::Child) => {
-            println!("child");
+            let mut parts = line.split_whitespace();
+            let command = parts.next().unwrap();
+            let args = parts;
+            let output = Command::new(command)
+                .args(args)
+                .spawn()
+                .map_err(|err| LshError::new(&format!("{}", err)));
+
+            match output {
+                Ok(output) => Ok(Status::Success),
+                Err(err) => Err(LshError::new(&err.message)),
+            }
         }
-        Err(err) => LshError
+        Err(_) => Err(LshError::new("fork error"))
     }
 }
