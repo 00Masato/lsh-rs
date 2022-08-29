@@ -1,8 +1,10 @@
 use std::{io, fmt, str::SplitWhitespace};
 use std::error;
+use std::path::Path;
 use std::process::Command;
 use fork::{fork, Fork};
 use nix::sys::wait::*;
+use nix::unistd::*;
 
 #[derive(Debug, Clone)]
 struct LshError {
@@ -86,4 +88,20 @@ fn lsh_launch(line: &str) -> Result<Status, LshError> {
         }
         Err(_) => Err(LshError::new("fork error"))
     }
+}
+
+fn lsh_cd(args: &str) -> Result<Status, LshError> {
+    if args.is_empty() {
+        Err(LshError::new("error"))
+    } else {
+        chdir(Path::new(&args))
+            .map(|_| Status::Success)
+            .map_err(|err| LshError::new(&err.to_string()))
+    }
+}
+
+fn lsh_help(line: &str) -> Result<Status, LshError> {
+}
+
+fn lsh_exit(line: &str) -> Result<Status, LshError> {
 }
