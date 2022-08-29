@@ -44,8 +44,7 @@ fn lsh_loop() {
     loop {
         println!("> ");
         line = lsh_read_line();
-        lsh_execute(&line)
-        println!("{} {}", line, args.next().unwrap());
+        lsh_execute(&line);
     }
 }
 
@@ -55,11 +54,7 @@ fn lsh_read_line() -> String {
     input
 }
 
-fn lsh_split_line(line: &str) -> SplitWhitespace {
-    line.split_whitespace()
-}
-
-fn lsh_launch(line: &str) -> Result<Status, LshError> {
+fn lsh_launch(command: &str, args: Vec<String>) -> Result<Status, LshError> {
     let pid = fork();
     match pid {
         Ok(Fork::Parent(child)) => {
@@ -73,9 +68,6 @@ fn lsh_launch(line: &str) -> Result<Status, LshError> {
             }
         }
         Ok(Fork::Child) => {
-            let mut parts = line.split_whitespace();
-            let command = parts.next().unwrap();
-            let args = parts;
             let output = Command::new(command)
                 .args(args)
                 .spawn()
@@ -115,12 +107,15 @@ fn lsh_exit() -> Result<Status, LshError> {
 fn lsh_execute(line: &str) -> Result<Status, LshError> {
     let mut parts = line.split_whitespace();
     let command = parts.next().unwrap();
-    let args = parts;
+    let args: Vec<String> = parts.map(|token: &str| String::from(token)).collect();
     if command.is_empty() {
         Ok(Status::Success)
     } else {
         match command {
-            "cd" => 
+            "cd" => lsh_cd(&args[0]),
+            "exit" => lsh_exit(),
+            "help" => lsh_help(),
+            _ => lsh_launch(&command, args)
         }
     }
 
