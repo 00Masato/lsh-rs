@@ -44,7 +44,7 @@ fn lsh_loop() {
     loop {
         println!("> ");
         line = lsh_read_line();
-        lsh_launch(&line);
+        lsh_execute(&line)
         println!("{} {}", line, args.next().unwrap());
     }
 }
@@ -100,8 +100,28 @@ fn lsh_cd(args: &str) -> Result<Status, LshError> {
     }
 }
 
-fn lsh_help(line: &str) -> Result<Status, LshError> {
+fn lsh_help() -> Result<Status, LshError> {
+    println!("LSH-rs\n");
+    println!("Type program names and arguments, and hit enter\n");
+    println!("The following are built in:\n");
+    println!("Use the man command for information on other programs.\n");
+    Ok(Status::Success)
 }
 
-fn lsh_exit(line: &str) -> Result<Status, LshError> {
+fn lsh_exit() -> Result<Status, LshError> {
+    Ok(Status::Exit)
+}
+
+fn lsh_execute(line: &str) -> Result<Status, LshError> {
+    let mut parts = line.split_whitespace();
+    let command = parts.next().unwrap();
+    let args = parts;
+    if command.is_empty() {
+        Ok(Status::Success)
+    } else {
+        match command {
+            "cd" => 
+        }
+    }
+
 }
